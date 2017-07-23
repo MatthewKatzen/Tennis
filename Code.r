@@ -91,7 +91,7 @@ for(i in c(2001:2016)){
   }
 }
 
-##create plots
+#create plots
 plot_func<-function(array_m,array_f,title,round){
 #set rows to observe in seed array
 if(round=='W'){
@@ -107,11 +107,11 @@ else{
   obs<-1:128
 }
 #create and clean data frame
-data_m<-data.frame(atp_seed[,,round])
+data_m<-data.frame(array_m[,,round])
 data_m$year<-rownames(data_m)
 data_m<-melt(data_m,id.vars="year")[obs,-2]#remove empty portion of df and get rid of var X1
 
-data_f<-data.frame(wta_seed[,,round])
+data_f<-data.frame(array_f[,,round])
 data_f$year<-rownames(data_f)
 data_f<-melt(data_f,id.vars="year")[obs,-2]#remove empty portion of df and get rid of var X1
   
@@ -169,3 +169,38 @@ ggsave(file='Winner.jpg',plot_func(atp_seed,wta_seed,"Winner",'W'),width=15)
 ggsave(file='Final.jpg',plot_func(atp_seed,wta_seed,"Final",'F'),width=15)
 ggsave(file='Semi.jpg',plot_func(atp_seed,wta_seed,"Semi Finals",'SF'),width=15)
 ggsave(file='Quarter.jpg',plot_func(atp_seed,wta_seed,"Quarter Finals",'QF'),width=15)
+
+#create summary table
+summary<-as.data.frame(matrix(ncol = 8,nrow = 4))
+rownames(summary)<-c('W','F','SF','QF')
+colnames(summary)<-c('mean_m','mean_w','median_m','median_w','sd_m','sd_w','IQR_m','IQR_w')
+for (round in c('W','F','SF','QF')){
+  if(round=='W'){
+  obs<-1
+  }else if(round=='F'){
+    obs<-1:2    
+  }else if(round=='SF'){
+    obs<-1:4
+  }else{
+    obs<-1:8
+  }
+  temp<-atp_seed[,obs,round]
+  temp[is.na(temp)]<-128-33
+  summary[round,'mean_m']<-round(mean(temp),2)
+  summary[round,'median_m']<-round(median(temp),2)
+  summary[round,'sd_m']<-round(sd(temp),2)
+  summary[round,'IQR_m']<-round(IQR(temp),2)
+  
+  temp<-wta_seed[,obs,round]
+  temp[is.na(temp)]<-128-33
+  summary[round,'mean_w']<-round(mean(temp),2)
+  summary[round,'median_w']<-round(median(temp),2)
+  summary[round,'sd_w']<-round(sd(temp),2)
+  summary[round,'IQR_w']<-round(IQR(temp),2)
+}
+
+p<-tableGrob(summary)
+ggsave(file='summary.jpg',p,width=)
+h = convertHeight(sum(p$heights), "in", TRUE)
+w = convertWidth(sum(p$widths), "in", TRUE)
+ggsave("summary.jpg", p, width=w, height=h)
